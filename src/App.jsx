@@ -42,13 +42,7 @@ const sampleLibrary = [
 ];
 
 const STORAGE_KEY = 'bookscape-library';
-
-const stats = [
-  { label: 'Books this year', value: '18' },
-  { label: 'Reading streak', value: '12 days' },
-  { label: 'Avg. rating', value: '4.7' },
-  { label: 'Goal progress', value: '72%' },
-];
+const GOAL_KEY = 'bookscape-goal';
 
 function normalizeBook(item) {
   const authors = item.volumeInfo?.authors ?? ['Unknown author'];
@@ -110,16 +104,56 @@ function App() {
   const [activeShelf, setActiveShelf] = useState('Currently Reading');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [yearlyGoal, setYearlyGoal] = useState(() => {
+    const storedGoal = localStorage.getItem(GOAL_KEY);
+
+    if (!storedGoal) {
+      return 12;
+    }
+
+    const numericGoal = Number(storedGoal);
+    return Number.isFinite(numericGoal) && numericGoal > 0 ? numericGoal : 12;
+  });
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
   }, [library]);
 
   useEffect(() => {
+    localStorage.setItem(GOAL_KEY, String(yearlyGoal));
+  }, [yearlyGoal]);
+
+  useEffect(() => {
     if (!selectedBook && library.length > 0) {
       setSelectedBook(library[0]);
     }
   }, [library, selectedBook]);
+
+  const finishedBooks = useMemo(
+    () => library.filter((book) => book.shelf === 'Finished').length,
+    [library]
+  );
+
+  const averageRating = useMemo(() => {
+    const ratedFinishedBooks = library.filter((book) => book.shelf === 'Finished' && typeof book.rating === 'number' && book.rating > 0);
+
+    if (ratedFinishedBooks.length === 0) {
+      return 'No ratings yet';
+    }
+
+    const total = ratedFinishedBooks.reduce((sum, book) => sum + Number(book.rating), 0);
+    return (total / ratedFinishedBooks.length).toFixed(1);
+  }, [library]);
+
+  const goalProgress = yearlyGoal > 0 ? Math.min(Math.round((finishedBooks / yearlyGoal) * 100), 100) : 0;
+  const booksRemaining = Math.max(yearlyGoal - finishedBooks, 0);
+
+  const stats = [
+    { label: 'Books this year', value: String(finishedBooks) },
+    { label: 'Reading streak', value: '12 days' },
+    { label: 'Avg. rating', value: averageRating },
+    { label: 'Goal progress', value: `${goalProgress}%` },
+  ];
 
   const filteredLibrary = useMemo(
     () => library.filter((book) => book.shelf === activeShelf),
@@ -221,6 +255,46 @@ function App() {
               <strong>{stat.value}</strong>
             </article>
           ))}
+        </section>
+
+        <section className="goal-panel panel">
+          <div className="section-heading">
+            <h3>Reading goal</h3>
+            <span className="muted-inline">Yearly target</span>
+          </div>
+
+          <div className="goal-controls">
+            <label htmlFor="yearly-goal">Books to finish</label>
+            <input
+              id="yearly-goal"
+              type="number"
+              min="1"
+              value={yearlyGoal}
+              onChange={(event) => setYearlyGoal(Math.max(1, Number(event.target.value) || 1))}
+            />
+          </div>
+
+          <div className="goal-summary">
+            <div>
+              <span>Finished</span>
+              <strong>{finishedBooks}</strong>
+            </div>
+            <div>
+              <span>Remaining</span>
+              <strong>{booksRemaining}</strong>
+            </div>
+            <div>
+              <span>Progress</span>
+              <strong>{goalProgress}%</strong>
+            </div>
+          </div>
+
+          <div className="progress-row">
+            <span>{finishedBooks}/{yearlyGoal} books</span>
+            <div className="progress-bar">
+              <span style={{ width: `${goalProgress}%` }} />
+            </div>
+          </div>
         </section>
 
         <section className="search-results panel">
