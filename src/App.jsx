@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const shelves = ['Want to Read', 'Currently Reading', 'Finished'];
 
@@ -40,6 +40,8 @@ const sampleLibrary = [
     rating: 4.8,
   },
 ];
+
+const STORAGE_KEY = 'bookscape-library';
 
 const stats = [
   { label: 'Books this year', value: '18' },
@@ -87,13 +89,37 @@ async function searchBooks(query) {
 }
 
 function App() {
-  const [library, setLibrary] = useState(sampleLibrary);
+  const [library, setLibrary] = useState(() => {
+    const storedLibrary = localStorage.getItem(STORAGE_KEY);
+
+    if (!storedLibrary) {
+      return sampleLibrary;
+    }
+
+    try {
+      const parsed = JSON.parse(storedLibrary);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : sampleLibrary;
+    } catch {
+      return sampleLibrary;
+    }
+  });
+
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [selectedBook, setSelectedBook] = useState(sampleLibrary[0]);
+  const [selectedBook, setSelectedBook] = useState(library[0] ?? sampleLibrary[0]);
   const [activeShelf, setActiveShelf] = useState('Currently Reading');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+  }, [library]);
+
+  useEffect(() => {
+    if (!selectedBook && library.length > 0) {
+      setSelectedBook(library[0]);
+    }
+  }, [library, selectedBook]);
 
   const filteredLibrary = useMemo(
     () => library.filter((book) => book.shelf === activeShelf),
