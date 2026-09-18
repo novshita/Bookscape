@@ -62,6 +62,16 @@ npm run preview
 Bookscape/
 ├── public/
 ├── src/
+│   ├── components/
+│   │   ├── AuthPanel.jsx
+│   │   ├── BookDetail.jsx
+│   │   ├── LibraryShelves.jsx
+│   │   ├── ReadingGoal.jsx
+│   │   ├── ReadingStatistics.jsx
+│   │   ├── SearchBar.jsx
+│   │   └── SearchResults.jsx
+│   ├── services/
+│   │   └── firebase.js
 │   ├── App.jsx
 │   ├── index.css
 │   └── main.jsx
@@ -78,7 +88,7 @@ The current app stores the library and yearly goal in the browser's local storag
 - `bookscape-library`
 - `bookscape-goal`
 
-This keeps the app usable without authentication or a backend. Firebase can be added later when user accounts and cloud synchronization are introduced.
+Without Firebase configuration, the app remains usable without authentication or a backend. When Firebase is configured and a user signs in, the library and yearly goal also sync to Firestore.
 
 ## Roadmap
 
@@ -91,9 +101,9 @@ This keeps the app usable without authentication or a backend. Firebase can be a
 - [x] Add yearly reading goals
 - [x] Add reading statistics
 - [x] Split the dashboard into reusable components
-- [ ] Add editable ratings and reviews
-- [ ] Add Firebase authentication
-- [ ] Add cloud library synchronization
+- [x] Add editable ratings and reviews
+- [x] Add optional Firebase authentication
+- [x] Add optional cloud library synchronization
 - [ ] Add personalized AI recommendations
 - [ ] Add mood-based recommendations
 - [ ] Add reading assistant features
@@ -102,13 +112,21 @@ This keeps the app usable without authentication or a backend. Firebase can be a
 
 ## Environment Variables
 
-The current Google Books integration works without an API key. If a key is added later, keep it in a local `.env` file and never commit real credentials.
+The Google Books integration works without an API key. Firebase is optional: without Firebase variables, the app stays in local mode and uses browser storage. To enable authentication and Firestore sync, create a local `.env` file with your Firebase web app configuration and never commit real credentials.
 
 Example:
 
 ```env
 VITE_GOOGLE_BOOKS_API_KEY=your_api_key
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 ```
+
+In Firebase Console, enable Email/Password authentication and create a Firestore database before signing in. User data is stored at `users/{userId}` and includes the library and yearly goal.
 
 ## Git Workflow
 

@@ -1,10 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
+import AuthPanel from './components/AuthPanel';
 import BookDetail from './components/BookDetail';
 import LibraryShelves from './components/LibraryShelves';
 import ReadingGoal from './components/ReadingGoal';
 import ReadingStatistics from './components/ReadingStatistics';
 import SearchBar from './components/SearchBar';
 import SearchResults from './components/SearchResults';
+import {
+  firebaseEnabled,
+  logOut,
+  saveUserData,
+  signIn,
+  signUp,
+  subscribeToAuth,
+  subscribeToUserData,
+} from './services/firebase';
 
 const shelves = ['Want to Read', 'Currently Reading', 'Finished'];
 
@@ -111,6 +121,9 @@ function App() {
   const [activeShelf, setActiveShelf] = useState('Currently Reading');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [authUser, setAuthUser] = useState(null);
+  const [authError, setAuthError] = useState('');
+  const [cloudReady, setCloudReady] = useState(!firebaseEnabled);
   const [yearlyGoal, setYearlyGoal] = useState(() => {
     const storedGoal = localStorage.getItem(GOAL_KEY);
 
@@ -129,6 +142,36 @@ function App() {
   useEffect(() => {
     localStorage.setItem(GOAL_KEY, String(yearlyGoal));
   }, [yearlyGoal]);
+
+  useEffect(() => subscribeToAuth((user) => {
+    setAuthUser(user);
+    setAuthError('');
+    setCloudReady(!user || !firebaseEnabled);
+  }), []);
+
+  useEffect(() => {
+    if (!authUser) {
+      return undefined;
+    }
+
+    return subscribeToUserData(authUser.uid, (data) => {
+      if (data?.library && Array.isArray(data.library) && data.library.length > 0) {
+        setLibrary(data.library);
+      }
+      if (Number.isFinite(data?.yearlyGoal) && data.yearlyGoal > 0) {
+        setYearlyGoal(data.yearlyGoal);
+      }
+      setCloudReady(true);
+    });
+  }, [authUser]);
+
+  useEffect(() => {
+    if (authUser && cloudReady) {
+      saveUserData(authUser.uid, { library, yearlyGoal }).catch(() => {
+        setAuthError('Cloud sync failed. Your local copy is still available.');
+      });
+    }
+  }, [authUser, cloudReady, library, yearlyGoal]);
 
   useEffect(() => {
     if (!selectedBook && library.length > 0) {
@@ -198,6 +241,15 @@ function App() {
     }
   };
 
+  const handleAuth = async (action, email, password) => {
+    setAuthError('');
+    try {
+      await action(email, password);
+    } catch (authActionError) {
+      setAuthError(authActionError.message || 'Authentication failed.');
+    }
+  };
+
   const addBookToShelf = (book, shelf) => {
     setLibrary((current) => {
       const existing = current.find((item) => item.id === book.id);
@@ -256,7 +308,14 @@ function App() {
           <a href="#">Goals</a>
         </nav>
 
-        <button className="primary-btn">Add a book</button>
+        <AuthPanel
+          enabled={firebaseEnabled}
+          user={authUser}
+          error={authError}
+          onSignIn={(email, password) => handleAuth(signIn, email, password)}
+          onSignUp={(email, password) => handleAuth(signUp, email, password)}
+          onSignOut={logOut}
+        />
       </header>
 
       <main className="content-grid">
