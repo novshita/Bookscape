@@ -59,6 +59,7 @@ function normalizeBook(item) {
     shelf: 'Want to Read',
     progress: 'Not started',
     rating: 0,
+    review: '',
     categories: categories.slice(0, 2),
   };
 }
@@ -194,18 +195,39 @@ function App() {
   const addBookToShelf = (book, shelf) => {
     setLibrary((current) => {
       const existing = current.find((item) => item.id === book.id);
+      const updatedBook = {
+        ...(existing ?? book),
+        shelf,
+        progress: shelf === 'Finished' ? '4.8 ★' : 'Not started',
+        review: existing?.review ?? book.review ?? '',
+        rating: existing?.rating ?? book.rating ?? 0,
+      };
 
       if (existing) {
         return current.map((item) =>
-          item.id === book.id ? { ...item, shelf, progress: shelf === 'Finished' ? '4.8 ★' : 'Not started' } : item
+          item.id === book.id ? updatedBook : item
         );
       }
 
-      return [{ ...book, shelf, progress: shelf === 'Finished' ? '4.8 ★' : 'Not started' }, ...current];
+      return [updatedBook, ...current];
     });
 
-    setSelectedBook({ ...book, shelf });
+    setSelectedBook((current) => ({
+      ...(current?.id === book.id ? current : book),
+      shelf,
+      progress: shelf === 'Finished' ? '4.8 ★' : 'Not started',
+    }));
     setActiveShelf(shelf);
+  };
+
+  const updateBookFeedback = (bookId, changes) => {
+    setLibrary((current) => current.map((book) => (
+      book.id === bookId ? { ...book, ...changes } : book
+    )));
+
+    setSelectedBook((current) => (
+      current?.id === bookId ? { ...current, ...changes } : current
+    ));
   };
 
   const visibleBook = selectedBook ?? filteredLibrary[0] ?? sampleLibrary[0];
@@ -451,6 +473,37 @@ function App() {
               </div>
 
               <p className="description">{visibleBook.description}</p>
+
+              <div className="feedback-panel">
+                <div className="feedback-heading">
+                  <h4>Your rating</h4>
+                  <span>{visibleBook.rating > 0 ? `${visibleBook.rating}/5` : 'Not rated'}</span>
+                </div>
+
+                <div className="rating-control" aria-label="Rate this book">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      type="button"
+                      className={rating <= (visibleBook.rating ?? 0) ? 'selected' : ''}
+                      aria-label={`Rate ${rating} out of 5`}
+                      aria-pressed={rating === visibleBook.rating}
+                      onClick={() => updateBookFeedback(visibleBook.id, { rating })}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+
+                <label className="review-label" htmlFor="book-review">Personal review</label>
+                <textarea
+                  id="book-review"
+                  value={visibleBook.review ?? ''}
+                  onChange={(event) => updateBookFeedback(visibleBook.id, { review: event.target.value })}
+                  placeholder="What did you think about this book?"
+                  rows="4"
+                />
+              </div>
 
               <div className="detail-actions">
                 {shelves.map((shelf) => (

@@ -611,6 +611,71 @@ h1 {
   line-height: 1.7;
 }
 
+.feedback-panel {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.feedback-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feedback-heading h4 {
+  font-size: 1rem;
+}
+
+.feedback-heading span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.rating-control {
+  display: flex;
+  gap: 4px;
+}
+
+.rating-control button {
+  border: 0;
+  background: transparent;
+  color: #c7cedd;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 2px;
+}
+
+.rating-control button.selected {
+  color: #f3ad35;
+}
+
+.review-label {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.feedback-panel textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-strong);
+  color: var(--ink);
+  padding: 11px 12px;
+  line-height: 1.5;
+}
+
+.feedback-panel textarea:focus,
+.goal-controls input:focus {
+  outline: 2px solid rgba(109, 94, 252, 0.25);
+  border-color: var(--primary);
+}
+
 .detail-actions {
   display: flex;
   flex-wrap: wrap;
