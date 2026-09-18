@@ -325,6 +325,61 @@ h1 {
   font-size: 1.4rem;
 }
 
+.analytics-panel {
+  padding: 24px 26px;
+}
+
+.analytics-panel .section-heading {
+  align-items: flex-start;
+}
+
+.analytics-panel h3 {
+  margin-top: 4px;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.analytics-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.analytics-card.featured {
+  background: linear-gradient(135deg, rgba(109, 94, 252, 0.12), rgba(255, 255, 255, 0.7));
+}
+
+.analytics-card span,
+.analytics-card small {
+  color: var(--muted);
+}
+
+.analytics-card strong {
+  font-size: 1.55rem;
+}
+
+.analytics-progress {
+  margin-top: 20px;
+}
+
+.analytics-progress .section-heading {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.analytics-progress .section-heading strong {
+  color: var(--ink);
+}
+
 .error-message {
   margin: 0 0 12px;
   color: #b42318;
@@ -590,6 +645,10 @@ h1 {
 
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
   }
 
   .hero {

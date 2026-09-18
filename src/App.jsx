@@ -147,6 +147,12 @@ function App() {
 
   const goalProgress = yearlyGoal > 0 ? Math.min(Math.round((finishedBooks / yearlyGoal) * 100), 100) : 0;
   const booksRemaining = Math.max(yearlyGoal - finishedBooks, 0);
+  const currentlyReadingBooks = library.filter((book) => book.shelf === 'Currently Reading').length;
+  const wantToReadBooks = library.filter((book) => book.shelf === 'Want to Read').length;
+  const completionRate = library.length > 0 ? Math.round((finishedBooks / library.length) * 100) : 0;
+  const highestRatedBook = library
+    .filter((book) => typeof book.rating === 'number' && book.rating > 0)
+    .sort((firstBook, secondBook) => secondBook.rating - firstBook.rating)[0];
 
   const stats = [
     { label: 'Books this year', value: String(finishedBooks) },
@@ -293,6 +299,44 @@ function App() {
             <span>{finishedBooks}/{yearlyGoal} books</span>
             <div className="progress-bar">
               <span style={{ width: `${goalProgress}%` }} />
+            </div>
+          </div>
+        </section>
+
+        <section className="analytics-panel panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow subtle">Library snapshot</p>
+              <h3>Reading statistics</h3>
+            </div>
+            <span className="muted-inline">Updated from your library</span>
+          </div>
+
+          <div className="analytics-grid">
+            <div className="analytics-card">
+              <span>Finished</span>
+              <strong>{finishedBooks}</strong>
+              <small>{completionRate}% of your library</small>
+            </div>
+            <div className="analytics-card">
+              <span>Currently reading</span>
+              <strong>{currentlyReadingBooks}</strong>
+              <small>{wantToReadBooks} waiting next</small>
+            </div>
+            <div className="analytics-card featured">
+              <span>Top rated</span>
+              <strong>{highestRatedBook ? `${highestRatedBook.rating} ★` : 'Not rated'}</strong>
+              <small>{highestRatedBook?.title ?? 'Finish a book to add a rating'}</small>
+            </div>
+          </div>
+
+          <div className="analytics-progress">
+            <div className="section-heading">
+              <span>Library completion</span>
+              <strong>{completionRate}%</strong>
+            </div>
+            <div className="progress-bar" aria-label={`${completionRate}% of library finished`}>
+              <span style={{ width: `${completionRate}%` }} />
             </div>
           </div>
         </section>
