@@ -1,4 +1,4 @@
-function BookDetail({ book, shelves, onMove, onFeedback }) {
+function BookDetail({ book, shelves, onMove, onFeedback, onProgress }) {
   return (
     <aside className="detail-panel panel">
       <p className="eyebrow subtle">Book detail</p>
@@ -12,6 +12,23 @@ function BookDetail({ book, shelves, onMove, onFeedback }) {
         <p className="meta subtle">{book.subtitle}</p>
         <div className="detail-tags">{(book.categories ?? ['General']).map((tag) => <span key={tag}>{tag}</span>)}</div>
         <p className="description">{book.description}</p>
+
+        <div className="reading-progress-panel">
+          <div className="feedback-heading">
+            <h4>Reading progress</h4>
+            <span>{typeof book.progress === 'number' ? `${book.progress}%` : book.progress}</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={typeof book.progress === 'number' ? book.progress : 0}
+            onChange={(event) => onProgress(event.target.value)}
+            aria-label="Reading progress percentage"
+          />
+          <div className="progress-scale"><span>Not started</span><span>Finished</span></div>
+        </div>
 
         <div className="feedback-panel">
           <div className="feedback-heading"><h4>Your rating</h4><span>{book.rating > 0 ? `${book.rating}/5` : 'Not rated'}</span></div>

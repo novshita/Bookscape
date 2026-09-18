@@ -28,7 +28,7 @@ const sampleLibrary = [
       'A practical guide to building better habits and breaking bad ones through systems and small daily improvements.',
     cover: '',
     shelf: 'Currently Reading',
-    progress: '64%',
+    progress: 64,
     rating: 4.8,
   },
   {
@@ -40,7 +40,7 @@ const sampleLibrary = [
       'Between life and death, Nora Seed explores the many alternate lives she could have lived.',
     cover: '',
     shelf: 'Want to Read',
-    progress: 'Not started',
+    progress: 0,
     rating: 4.6,
   },
   {
@@ -52,13 +52,34 @@ const sampleLibrary = [
       'A deeply personal memoir tracing a young woman’s journey from survival to education and independence.',
     cover: '',
     shelf: 'Finished',
-    progress: '4.8 ★',
+    progress: 100,
     rating: 4.8,
   },
 ];
 
 const STORAGE_KEY = 'bookscape-library';
 const GOAL_KEY = 'bookscape-goal';
+
+function getProgressValue(book) {
+  if (typeof book.progress === 'number') {
+    return Math.min(Math.max(Math.round(book.progress), 0), 100);
+  }
+
+  const match = String(book.progress ?? '').match(/\d+/);
+  if (match) {
+    return Math.min(Math.max(Number(match[0]), 0), 100);
+  }
+
+  return book.shelf === 'Finished' ? 100 : 0;
+}
+
+function getProgressLabel(value) {
+  return value === 0 ? 'Not started' : `${value}%`;
+}
+
+function getDateKey(date) {
+  return new Date(date).toISOString().slice(0, 10);
+}
 
 function normalizeBook(item) {
   const authors = item.volumeInfo?.authors ?? ['Unknown author'];
@@ -204,9 +225,31 @@ function App() {
     .filter((book) => typeof book.rating === 'number' && book.rating > 0)
     .sort((firstBook, secondBook) => secondBook.rating - firstBook.rating)[0];
 
+  const readingStreak = useMemo(() => {
+    const activityDates = new Set(
+      library
+        .map((book) => book.lastReadAt)
+        .filter(Boolean)
+        .map(getDateKey)
+    );
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    let cursor = activityDates.has(getDateKey(today)) ? today : yesterday;
+    let streak = 0;
+
+    while (activityDates.has(getDateKey(cursor))) {
+      streak += 1;
+      cursor = new Date(cursor);
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    return streak;
+  }, [library]);
+
   const stats = [
     { label: 'Books this year', value: String(finishedBooks) },
-    { label: 'Reading streak', value: '12 days' },
+    { label: 'Reading streak', value: `${readingStreak} days` },
     { label: 'Avg. rating', value: averageRating },
     { label: 'Goal progress', value: `${goalProgress}%` },
   ];
@@ -256,7 +299,9 @@ function App() {
       const updatedBook = {
         ...(existing ?? book),
         shelf,
-        progress: shelf === 'Finished' ? '4.8 ★' : 'Not started',
+        progress: shelf === 'Finished' ? 100 : getProgressValue(existing ?? book),
+        lastReadAt: shelf === 'Want to Read' ? existing?.lastReadAt : new Date().toISOString(),
+        finishedAt: shelf === 'Finished' ? existing?.finishedAt ?? new Date().toISOString() : undefined,
         review: existing?.review ?? book.review ?? '',
         rating: existing?.rating ?? book.rating ?? 0,
       };
@@ -273,9 +318,49 @@ function App() {
     setSelectedBook((current) => ({
       ...(current?.id === book.id ? current : book),
       shelf,
-      progress: shelf === 'Finished' ? '4.8 ★' : 'Not started',
+      progress: shelf === 'Finished' ? 100 : getProgressValue(current?.id === book.id ? current : book),
     }));
     setActiveShelf(shelf);
+  };
+
+  const updateBookProgress = (bookId, progress, sourceBook = null) => {
+    const nextProgress = Math.min(Math.max(Number(progress), 0), 100);
+    const now = new Date().toISOString();
+
+    setLibrary((current) => {
+      const existing = current.find((book) => book.id === bookId);
+      const updatedBook = {
+        ...(existing ?? sourceBook),
+        progress: nextProgress,
+        shelf: nextProgress === 100 ? 'Finished' : existing?.shelf === 'Finished' ? 'Currently Reading' : existing?.shelf ?? 'Currently Reading',
+        lastReadAt: nextProgress > 0 ? now : existing?.lastReadAt,
+        finishedAt: nextProgress === 100 ? existing?.finishedAt ?? now : undefined,
+      };
+
+      if (existing) {
+        return current.map((book) => book.id === bookId ? updatedBook : book);
+      }
+
+      return sourceBook ? [updatedBook, ...current] : current;
+    });
+
+    setSelectedBook((current) => {
+      if (current?.id !== bookId) {
+        return current;
+      }
+
+      return {
+        ...current,
+        progress: nextProgress,
+        shelf: nextProgress === 100 ? 'Finished' : current.shelf === 'Finished' ? 'Currently Reading' : current.shelf,
+        lastReadAt: nextProgress > 0 ? now : current.lastReadAt,
+        finishedAt: nextProgress === 100 ? current.finishedAt ?? now : undefined,
+      };
+    });
+
+    if (nextProgress === 100) {
+      setActiveShelf('Finished');
+    }
   };
 
   const updateBookFeedback = (bookId, changes) => {
@@ -381,6 +466,7 @@ function App() {
             shelves={shelves}
             onMove={(shelf) => addBookToShelf(visibleBook, shelf)}
             onFeedback={(changes) => updateBookFeedback(visibleBook.id, changes)}
+            onProgress={(progress) => updateBookProgress(visibleBook.id, progress, visibleBook)}
           />
         </section>
       </main>

@@ -1,3 +1,16 @@
+function getProgressValue(book) {
+  if (typeof book.progress === 'number') {
+    return Math.min(Math.max(Math.round(book.progress), 0), 100);
+  }
+
+  const match = String(book.progress ?? '').match(/\d+/);
+  return match ? Math.min(Math.max(Number(match[0]), 0), 100) : book.shelf === 'Finished' ? 100 : 0;
+}
+
+function getProgressLabel(value) {
+  return value === 0 ? 'Not started' : `${value}%`;
+}
+
 function LibraryShelves({ shelves, activeShelf, books, onShelfChange, onSelect }) {
   return (
     <div className="shelves panel">
@@ -12,7 +25,7 @@ function LibraryShelves({ shelves, activeShelf, books, onShelfChange, onSelect }
             <div className="book-copy">
               <div className="book-header"><h4>{book.title}</h4><span className="status-pill">{book.shelf}</span></div>
               <p>{book.author}</p>
-              <div className="progress-row"><span>{book.progress}</span><div className="progress-bar"><span style={{ width: book.progress === '64%' ? '64%' : '100%' }} /></div></div>
+              <div className="progress-row"><span>{getProgressLabel(getProgressValue(book))}</span><div className="progress-bar"><span style={{ width: `${getProgressValue(book)}%` }} /></div></div>
             </div>
           </article>
         ))}

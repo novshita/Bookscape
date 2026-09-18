@@ -689,6 +689,27 @@ h1 {
   line-height: 1.7;
 }
 
+.reading-progress-panel {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.reading-progress-panel input[type='range'] {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.progress-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .feedback-panel {
   display: grid;
   gap: 10px;

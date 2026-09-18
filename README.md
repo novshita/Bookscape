@@ -17,6 +17,9 @@ Bookscape is a personal reading companion for discovering books, managing a libr
 - View shelf breakdown and top-rated books
 - Record completion dates for books moved to `Finished`
 - View monthly completions for books with completion dates
+- Update reading progress with a percentage slider
+- Automatically move books to `Finished` at 100% progress
+- Track reading activity dates and calculate the current streak
 - Responsive dashboard layout
 
 ## Tech Stack
@@ -100,6 +103,7 @@ Without Firebase configuration, the app remains usable without authentication or
 - [x] Persist library state locally
 - [x] Add yearly reading goals
 - [x] Add reading statistics
+- [x] Add real reading progress and streak tracking
 - [x] Split the dashboard into reusable components
 - [x] Add editable ratings and reviews
 - [x] Add optional Firebase authentication
