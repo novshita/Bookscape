@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import BookDetail from './components/BookDetail';
+import LibraryShelves from './components/LibraryShelves';
+import ReadingGoal from './components/ReadingGoal';
+import ReadingStatistics from './components/ReadingStatistics';
+import SearchBar from './components/SearchBar';
+import SearchResults from './components/SearchResults';
 
 const shelves = ['Want to Read', 'Currently Reading', 'Finished'];
 
@@ -263,17 +269,12 @@ function App() {
             </p>
           </div>
 
-          <form className="search-box" role="search" onSubmit={handleSearch}>
-            <span aria-hidden="true">🔎</span>
-            <input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search books, authors, genres..."
-              aria-label="Search books"
-            />
-            <button type="submit" disabled={loading}>{loading ? 'Loading...' : 'Search'}</button>
-          </form>
+          <SearchBar
+            query={query}
+            loading={loading}
+            onQueryChange={setQuery}
+            onSearch={handleSearch}
+          />
         </section>
 
         <section className="stats-grid" aria-label="Reading statistics">
@@ -285,240 +286,43 @@ function App() {
           ))}
         </section>
 
-        <section className="goal-panel panel">
-          <div className="section-heading">
-            <h3>Reading goal</h3>
-            <span className="muted-inline">Yearly target</span>
-          </div>
+        <ReadingGoal
+          yearlyGoal={yearlyGoal}
+          finishedBooks={finishedBooks}
+          booksRemaining={booksRemaining}
+          goalProgress={goalProgress}
+          onGoalChange={setYearlyGoal}
+        />
 
-          <div className="goal-controls">
-            <label htmlFor="yearly-goal">Books to finish</label>
-            <input
-              id="yearly-goal"
-              type="number"
-              min="1"
-              value={yearlyGoal}
-              onChange={(event) => setYearlyGoal(Math.max(1, Number(event.target.value) || 1))}
-            />
-          </div>
+        <ReadingStatistics
+          finishedBooks={finishedBooks}
+          currentlyReadingBooks={currentlyReadingBooks}
+          wantToReadBooks={wantToReadBooks}
+          highestRatedBook={highestRatedBook}
+          completionRate={completionRate}
+        />
 
-          <div className="goal-summary">
-            <div>
-              <span>Finished</span>
-              <strong>{finishedBooks}</strong>
-            </div>
-            <div>
-              <span>Remaining</span>
-              <strong>{booksRemaining}</strong>
-            </div>
-            <div>
-              <span>Progress</span>
-              <strong>{goalProgress}%</strong>
-            </div>
-          </div>
-
-          <div className="progress-row">
-            <span>{finishedBooks}/{yearlyGoal} books</span>
-            <div className="progress-bar">
-              <span style={{ width: `${goalProgress}%` }} />
-            </div>
-          </div>
-        </section>
-
-        <section className="analytics-panel panel">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow subtle">Library snapshot</p>
-              <h3>Reading statistics</h3>
-            </div>
-            <span className="muted-inline">Updated from your library</span>
-          </div>
-
-          <div className="analytics-grid">
-            <div className="analytics-card">
-              <span>Finished</span>
-              <strong>{finishedBooks}</strong>
-              <small>{completionRate}% of your library</small>
-            </div>
-            <div className="analytics-card">
-              <span>Currently reading</span>
-              <strong>{currentlyReadingBooks}</strong>
-              <small>{wantToReadBooks} waiting next</small>
-            </div>
-            <div className="analytics-card featured">
-              <span>Top rated</span>
-              <strong>{highestRatedBook ? `${highestRatedBook.rating} ★` : 'Not rated'}</strong>
-              <small>{highestRatedBook?.title ?? 'Finish a book to add a rating'}</small>
-            </div>
-          </div>
-
-          <div className="analytics-progress">
-            <div className="section-heading">
-              <span>Library completion</span>
-              <strong>{completionRate}%</strong>
-            </div>
-            <div className="progress-bar" aria-label={`${completionRate}% of library finished`}>
-              <span style={{ width: `${completionRate}%` }} />
-            </div>
-          </div>
-        </section>
-
-        <section className="search-results panel">
-          <div className="section-heading">
-            <h3>Search results</h3>
-            <span className="muted-inline">{searchResults.length} books found</span>
-          </div>
-
-          {error ? <p className="error-message">{error}</p> : null}
-
-          <div className="result-grid">
-            {searchResults.length === 0 ? (
-              <p className="empty-state">Search for a book to see recommendations and details here.</p>
-            ) : (
-              searchResults.map((book) => (
-                <button
-                  key={book.id}
-                  type="button"
-                  className={`result-card ${selectedBook?.id === book.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedBook(book)}
-                >
-                  <div className="mini-cover" aria-hidden="true">
-                    {book.cover ? <img src={book.cover} alt="" /> : <span>{book.title.charAt(0)}</span>}
-                  </div>
-                  <div className="result-copy">
-                    <strong>{book.title}</strong>
-                    <span>{book.author}</span>
-                    <small>{book.subtitle}</small>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </section>
+        <SearchResults
+          results={searchResults}
+          selectedBook={selectedBook}
+          error={error}
+          onSelect={setSelectedBook}
+        />
 
         <section className="content-columns">
-          <div className="shelves panel">
-            <div className="section-heading">
-              <h3>My library</h3>
-              <a href="#">View all</a>
-            </div>
-
-            <div className="shelf-tabs" aria-label="Reading shelves">
-              {shelves.map((shelf) => (
-                <button
-                  key={shelf}
-                  type="button"
-                  className={shelf === activeShelf ? 'active' : ''}
-                  onClick={() => setActiveShelf(shelf)}
-                >
-                  {shelf}
-                </button>
-              ))}
-            </div>
-
-            <div className="book-list">
-              {filteredLibrary.length === 0 ? (
-                <p className="empty-state">No books in this shelf yet.</p>
-              ) : (
-                filteredLibrary.map((book) => (
-                  <article
-                    key={book.id}
-                    className="book-card"
-                    onClick={() => setSelectedBook(book)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        setSelectedBook(book);
-                      }
-                    }}
-                  >
-                    <div className="book-cover" aria-hidden="true">
-                      {book.cover ? <img src={book.cover} alt="" /> : <span>{book.title.charAt(0)}</span>}
-                    </div>
-                    <div className="book-copy">
-                      <div className="book-header">
-                        <h4>{book.title}</h4>
-                        <span className="status-pill">{book.shelf}</span>
-                      </div>
-                      <p>{book.author}</p>
-                      <div className="progress-row">
-                        <span>{book.progress}</span>
-                        <div className="progress-bar">
-                          <span style={{ width: book.progress === '64%' ? '64%' : '100%' }} />
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
-          </div>
-
-          <aside className="detail-panel panel">
-            <p className="eyebrow subtle">Book detail</p>
-            <div className="detail-cover" aria-hidden="true">
-              {visibleBook.cover ? <img src={visibleBook.cover} alt="" /> : <span>{visibleBook.title.charAt(0)}</span>}
-            </div>
-
-            <div className="detail-copy">
-              <h3>{visibleBook.title}</h3>
-              <p className="meta">{visibleBook.author}</p>
-              <p className="meta subtle">{visibleBook.subtitle}</p>
-
-              <div className="detail-tags">
-                {(visibleBook.categories ?? ['General']).map((tag) => (
-                  <span key={tag}>{tag}</span>
-                ))}
-              </div>
-
-              <p className="description">{visibleBook.description}</p>
-
-              <div className="feedback-panel">
-                <div className="feedback-heading">
-                  <h4>Your rating</h4>
-                  <span>{visibleBook.rating > 0 ? `${visibleBook.rating}/5` : 'Not rated'}</span>
-                </div>
-
-                <div className="rating-control" aria-label="Rate this book">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <button
-                      key={rating}
-                      type="button"
-                      className={rating <= (visibleBook.rating ?? 0) ? 'selected' : ''}
-                      aria-label={`Rate ${rating} out of 5`}
-                      aria-pressed={rating === visibleBook.rating}
-                      onClick={() => updateBookFeedback(visibleBook.id, { rating })}
-                    >
-                      ★
-                    </button>
-                  ))}
-                </div>
-
-                <label className="review-label" htmlFor="book-review">Personal review</label>
-                <textarea
-                  id="book-review"
-                  value={visibleBook.review ?? ''}
-                  onChange={(event) => updateBookFeedback(visibleBook.id, { review: event.target.value })}
-                  placeholder="What did you think about this book?"
-                  rows="4"
-                />
-              </div>
-
-              <div className="detail-actions">
-                {shelves.map((shelf) => (
-                  <button
-                    key={shelf}
-                    type="button"
-                    className={visibleBook.shelf === shelf ? 'active' : ''}
-                    onClick={() => addBookToShelf(visibleBook, shelf)}
-                  >
-                    {shelf}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </aside>
+          <LibraryShelves
+            shelves={shelves}
+            activeShelf={activeShelf}
+            books={filteredLibrary}
+            onShelfChange={setActiveShelf}
+            onSelect={setSelectedBook}
+          />
+          <BookDetail
+            book={visibleBook}
+            shelves={shelves}
+            onMove={(shelf) => addBookToShelf(visibleBook, shelf)}
+            onFeedback={(changes) => updateBookFeedback(visibleBook.id, changes)}
+          />
         </section>
       </main>
     </div>

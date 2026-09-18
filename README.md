@@ -90,7 +90,7 @@ This keeps the app usable without authentication or a backend. Firebase can be a
 - [x] Persist library state locally
 - [x] Add yearly reading goals
 - [x] Add reading statistics
-- [ ] Split the dashboard into reusable components
+- [x] Split the dashboard into reusable components
 - [ ] Add editable ratings and reviews
 - [ ] Add Firebase authentication
 - [ ] Add cloud library synchronization
